@@ -8,13 +8,12 @@ contact = zappa.run port, ->
     console.log("Secret: #{secret}")
     
     if process.env.REDISTOGO_URL
-        # redistogo as session store
+        # redistogo as session store, will survive heroku restart
         Redis_store = require('connect-redis')(express)
         url = require('url')
         redisUrl = url.parse(process.env.REDISTOGO_URL)
         redisAuth = redisUrl.auth.split(':')
         store = new Redis_store({host:redisUrl.hostname,port:redisUrl.port,db:redisAuth[0],pass:redisAuth[1]})
-        console.log(store)
         use 'cookieParser', session: {secret: secret, store: store} # redis as session store
     else:
         # no session store
@@ -22,8 +21,8 @@ contact = zappa.run port, ->
 
     if false
         mongostore = require('connect-mongodb')
-        #store = new mongostore({db:mongoose.mongo.Db})     # can't find the mongodb-native Db object 
-        #use 'cookieParser', session: {secret: secret, store: store}        # store doesn't work
+        #store = new mongostore({db:mongoose.mongo.Db})     # can't find the mongodb-native Db object :\ posted to mailing list
+        #use 'cookieParser', session: {secret: secret, store: store}
 
     mongoose = require 'mongoose'
     mc = mongoose.connect(process.env.MONGOLAB_URI || 'mongodb://localhost/contact')
