@@ -86,6 +86,7 @@ contact = zappa.run port, ->
                 return redirect '/'
             @game = game
             @owner = @game.owner
+            @url = request.url
             @owned = (@owner == @user)
             #@remaining = @game.secret[@game.state.length..]
             render 'game'
@@ -96,9 +97,11 @@ contact = zappa.run port, ->
         @title = 'Contact'
         h1 'A game of Contact'
         if @owned
-            p "This is your game, #{@user}"
+            p ->
+                text "This is your game, #{@user}. Invite your friends to play by sharing with them "
+                a href:@url, "this page's url."
         else
-            p "This is #{@owner}'s game"
+            p "Guess #{@owner}'s secret word by setting clues to other players"
         if @owned
             h2 ->
                 text @game.state
