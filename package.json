@@ -1,8 +1,10 @@
 {
-  "name": "contact",
+  "name": "megablogger",
   "version": "0.0.1",
   "dependencies": {
-    "zappa" : ">= 0.2.0",
-    "coffee-script": ">= 1.1.2"
+    "zappa" : "0.2.0",
+    "coffee-script": "1.1.2",
+    "mongoose" : "2.1.2",
+    "rbytes" : "0.0.2"
   }
 }

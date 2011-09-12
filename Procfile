@@ -1,1 +1,1 @@
-web: coffee cuppa.coffee
+web: coffee contact.coffee
