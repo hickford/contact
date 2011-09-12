@@ -4,10 +4,21 @@ port = process.env.PORT || 5000	# 5000 for consistency with foreman's default
 contact = zappa.run port, ->
     enable 'default layout'     # html, head, body, etc
     enable 'serve jquery'
-    use 'cookieParser', session: {secret: (require 'rbytes').randomBytes(16).toHex()}
+    secret = process.env.SECRET || (require 'rbytes').randomBytes(16).toHex()
+    console.log("Secret: #{secret}")
+
+    #use 'cookieParser', session: {secret: secret)}     # no session store
+    
+    redis_store = require('connect-redis')(express)
+    use 'cookieParser', session: {secret: secret, store: new redis_store} # redis as connection store
 
     mongoose = require 'mongoose'
-    mongoose.connect(process.env.MONGOLAB_URI || 'mongodb://localhost/contact')
+    mc = mongoose.connect(process.env.MONGOLAB_URI || 'mongodb://localhost/contact')
+
+    #mongostore = require('connect-mongodb')
+    #store = new mongostore({db:mongoose.mongo.Db})     # can't find the mongodb-native Db object :\
+    #use 'cookieParser', session: {secret: secret, store: store}        # store doesn't work
+
     def ObjectId: mongoose.Types.ObjectId
     game_schema = new mongoose.Schema({
             secret : String,
@@ -19,7 +30,6 @@ contact = zappa.run port, ->
     game_schema.virtual('remaining').get( ->
         this.secret[this.state.length..]
     )
-    
     def Game: mongoose.model('Game',game_schema)
 
     def querystring: require 'querystring'
@@ -64,10 +74,11 @@ contact = zappa.run port, ->
             return redirect '/login' + '?' + querystring.stringify( {destination: request.url})
         @user = session.user
         Game.findById(id, (err, game) =>             # need a timeout
-            if err
+            if err or !game
                 return redirect '/'
             @game = game
-            @owned = (@game.owner == @user)
+            @owner = @game.owner
+            @owned = (@owner == @user)
             #@remaining = @game.secret[@game.state.length..]
             render 'game'
         )
@@ -79,7 +90,7 @@ contact = zappa.run port, ->
         if @owned
             p "This is your game, #{@user}"
         else
-            p "This is #{@user}'s game"
+            p "This is #{@owner}'s game"
         if @owned
             h2 ->
                 text @game.state
@@ -116,8 +127,6 @@ contact = zappa.run port, ->
         p @madness
         if @user
             partial 'new'
-
-        if @user
             partial 'logout'
         else
             partial 'login'    
