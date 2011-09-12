@@ -6,18 +6,27 @@ contact = zappa.run port, ->
     enable 'serve jquery'
     secret = process.env.SECRET || (require 'rbytes').randomBytes(16).toHex()
     console.log("Secret: #{secret}")
-
-    #use 'cookieParser', session: {secret: secret)}     # no session store
     
-    redis_store = require('connect-redis')(express)
-    use 'cookieParser', session: {secret: secret, store: new redis_store} # redis as connection store
+    if process.env.REDISTOGO_URL
+        # redistogo as session store
+        Redis_store = require('connect-redis')(express)
+        url = require('url')
+        redisUrl = url.parse(process.env.REDISTOGO_URL)
+        redisAuth = redisUrl.auth.split(':')
+        store = new Redis_store({host:redisUrl.hostname,port:redisUrl.port,db:redisAuth[0],pass:redisAuth[1]})
+        console.log(store)
+        use 'cookieParser', session: {secret: secret, store: store} # redis as session store
+    else:
+        # no session store
+        use 'cookieParser', session: {secret: secret} 
+
+    if false
+        mongostore = require('connect-mongodb')
+        #store = new mongostore({db:mongoose.mongo.Db})     # can't find the mongodb-native Db object 
+        #use 'cookieParser', session: {secret: secret, store: store}        # store doesn't work
 
     mongoose = require 'mongoose'
     mc = mongoose.connect(process.env.MONGOLAB_URI || 'mongodb://localhost/contact')
-
-    #mongostore = require('connect-mongodb')
-    #store = new mongostore({db:mongoose.mongo.Db})     # can't find the mongodb-native Db object :\
-    #use 'cookieParser', session: {secret: secret, store: store}        # store doesn't work
 
     def ObjectId: mongoose.Types.ObjectId
     game_schema = new mongoose.Schema({
