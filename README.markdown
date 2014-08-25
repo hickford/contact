@@ -9,4 +9,4 @@ This project is far from finished, the game isn't playable. However, the login a
 
 Hopefully I learnt something about deploying Node.js to Heroku.
 
-<http://contact-game.herokuapp.com/>
+https://contact-game.herokuapp.com/
